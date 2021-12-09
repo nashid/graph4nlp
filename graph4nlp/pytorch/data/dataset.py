@@ -498,51 +498,62 @@ class Dataset(torch.utils.data.Dataset):
     ):
 
         ret = []
-        if graph_type == "static":
-            print("Connecting to stanfordcorenlp server...")
-            processor = stanfordcorenlp.StanfordCoreNLP(
-                "http://localhost", port=port, timeout=timeout
-            )
-
-            if topology_builder == IEBasedGraphConstruction:
-                props_coref = {
-                    "annotators": "tokenize, ssplit, pos, lemma, ner, parse, coref",
-                    "tokenize.options": "splitHyphenated=true,normalizeParentheses=true,"
-                    "normalizeOtherBrackets=true",
-                    "tokenize.whitespace": False,
-                    "ssplit.isOneSentence": False,
-                    "outputFormat": "json",
-                }
-                props_openie = {
-                    "annotators": "tokenize, ssplit, pos, ner, parse, openie",
-                    "tokenize.options": "splitHyphenated=true,normalizeParentheses=true,"
-                    "normalizeOtherBrackets=true",
-                    "tokenize.whitespace": False,
-                    "ssplit.isOneSentence": False,
-                    "outputFormat": "json",
-                    "openie.triple.strict": "true",
-                }
-                processor_args = [props_coref, props_openie]
-            elif topology_builder == DependencyBasedGraphConstruction:
-                processor_args = {
-                    "annotators": "ssplit,tokenize,depparse",
-                    "tokenize.options": "splitHyphenated=false,normalizeParentheses=false,"
-                    "normalizeOtherBrackets=false",
-                    "tokenize.whitespace": True,
-                    "ssplit.isOneSentence": True,
-                    "outputFormat": "json",
-                }
-            elif topology_builder == ConstituencyBasedGraphConstruction:
+        if graph_type.startswith("static"):
+            if graph_type.startswith("static-ast"):
+                processor = None
                 processor_args = {
                     "annotators": "tokenize,ssplit,pos,parse",
                     "tokenize.options": "splitHyphenated=false,normalizeParentheses=false,"
-                    "normalizeOtherBrackets=false",
+                                        "normalizeOtherBrackets=false",
                     "tokenize.whitespace": True,
                     "ssplit.isOneSentence": False,
                     "outputFormat": "json",
                 }
             else:
-                raise NotImplementedError
+                print("Connecting to stanfordcorenlp server...")
+                processor = stanfordcorenlp.StanfordCoreNLP(
+                    "http://localhost", port=port, timeout=timeout
+                )
+
+                if topology_builder == IEBasedGraphConstruction:
+                    props_coref = {
+                        "annotators": "tokenize, ssplit, pos, lemma, ner, parse, coref",
+                        "tokenize.options": "splitHyphenated=true,normalizeParentheses=true,"
+                        "normalizeOtherBrackets=true",
+                        "tokenize.whitespace": False,
+                        "ssplit.isOneSentence": False,
+                        "outputFormat": "json",
+                    }
+                    props_openie = {
+                        "annotators": "tokenize, ssplit, pos, ner, parse, openie",
+                        "tokenize.options": "splitHyphenated=true,normalizeParentheses=true,"
+                        "normalizeOtherBrackets=true",
+                        "tokenize.whitespace": False,
+                        "ssplit.isOneSentence": False,
+                        "outputFormat": "json",
+                        "openie.triple.strict": "true",
+                    }
+                    processor_args = [props_coref, props_openie]
+                elif topology_builder == DependencyBasedGraphConstruction:
+                    processor_args = {
+                        "annotators": "ssplit,tokenize,depparse",
+                        "tokenize.options": "splitHyphenated=false,normalizeParentheses=false,"
+                        "normalizeOtherBrackets=false",
+                        "tokenize.whitespace": True,
+                        "ssplit.isOneSentence": True,
+                        "outputFormat": "json",
+                    }
+                elif topology_builder == ConstituencyBasedGraphConstruction:
+                    processor_args = {
+                        "annotators": "tokenize,ssplit,pos,parse",
+                        "tokenize.options": "splitHyphenated=false,normalizeParentheses=false,"
+                        "normalizeOtherBrackets=false",
+                        "tokenize.whitespace": True,
+                        "ssplit.isOneSentence": False,
+                        "outputFormat": "json",
+                    }
+                else:
+                    raise NotImplementedError
             print("CoreNLP server connected.")
             pop_idxs = []
             for cnt, item in enumerate(data_items):
